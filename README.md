@@ -1,44 +1,16 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Website: http://citydashboard-dev.azurewebsites.net/ (please wait for 6 seconds for the data to be retrieved from the API)
 
-## Available Scripts
+For my demo program, which is an application that pulls time zone information and weather information from different cities at real time. If I did not apply reactive programming, the synchronous implementation would look something like this:
 
-In the project directory, you can run:
+For every 6 seconds
+    For each city in the array   
+	Read from the Time API for the city
+	Read from the Weather API for the city
+	Update the result on the UI.
+    End for
+End for
 
-### `npm start`
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Since I am using jQuery ajax for the API web requests, which is asynchronous, meaning the response returns right away, thus there is no certainty on the sequence of events. It is possible that City 3 will have the weather updated before city 2 finish reading from the web API, and this will cause a problem for my application, because the UI will not be reflecting all of the cities time zone at the same time.  The RxJS operator MergeMap allows observables to be subscribed concurrently.  The operator forkJoin in particular, makes sure that certain action will only proceed when a response has been received for all.
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+As a web developer, I have used callback to handle this kind of situation, the problem with callback is that chained events can quickly turn into Callback Hell (please refer to code in Appendix).  Thus, in order to keep the code shallow without the growing indentation level, ES6 promise came to the rescue. But when I apply promise in my demo application, the code can get messy and complex easily when multiple requests/events are involved (please refer to code in Appendix). And this is because Promises works well with onetime events, and if we move from onetime events to event streams, Promises show limitations as it can only handle one asynchronous request with each promise. Therefore, when it comes to dealing with stream of, I had to use RxJS observable operators such as mergeMap which allows me to flatten the higher order observables and eliminates the nested composition. As one can see, the final program flows along the vertical axis only, so we can read the code line by line and reason about what is happening line after line (please refer to code in Appendix).
