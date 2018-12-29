@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import Square from './Square';
+//import Square from './Square';
 import $ from "jquery";
 import { Observable, just,Subject, ReplaySubject, from, of, range, timer, pipe , interval} from 'rxjs';
 
@@ -9,171 +9,63 @@ var Rx= require("rxjs/Rx")
 
 class App extends Component {
 
-  
-  componentWillMount(){
-  /*  const squareClicks = Rx.Observable.fromEvent($(".square"), 'click');
-    squareClicks.subscribe(event => {
-        alert(event);
-    })
-    */
-    //interval.subscribe()
-  
-  }
+  state = {cities:[]};
+  results = [];
+
   componentDidMount(){
      
-    const interval = Rx.Observable.interval(1000);
-    var citiesArray = [{"city": "Toronto" ,"country":"CA"},{"city":"Chicago","country":"US"}];
 
-    Rx.Observable.from(citiesArray).mergeMap(
-      (cityCountry)=>Rx.Observable.interval(1000)
-    )
-    .mergeMap((cityCountry)=>{
-        alert(cityCountry.city)
-    })    
-    .subscribe(
-      function(){
-      //alert('hi');
-      }
-    );
-   
-  }
+      var citiesArray = [{"city": "Toronto" ,"country":"CA"},{"city":"Chicago","country":"US"}, {"city":"Tokyo","country":"JP"},
+      {"city":"Beijing", "country": "CN"}, {"city":"Shanghai","country":"CN"},{"city":"Paris","country":"FR"},
+      {"city":"Ottawa","country":"CA"},
+      {"city":"Vancouver", "country":"CA"},{"city":"Nice", "country":"FR"}, {"city":"Montreal","country":"CA"},{"city":"Washington","country":"US"}];
+
+      var self = this;
+      let timeUrl= "http://vip.timezonedb.com/v2.1/get-time-zone?key=D8D8JJNTAOLC&format=json&by=city&city=";
+      let weatherURL = "http://api.openweathermap.org/data/2.5/weather?appid=3339efa2e2e6a13c4522b8aff7c159fe&q=";
+       Rx.Observable.interval(6000)
+      .mergeMap(()=>Rx.Observable.from(citiesArray))
+      .mergeMap((cityCountry)=>Rx.Observable.forkJoin(
+        Rx.Observable.from( $.get(timeUrl + cityCountry.city  +"&country="+cityCountry.country)), 
+        Rx.Observable.from($.get(weatherURL+cityCountry.city+","+ cityCountry.country)
+      )))
+      .map(
+        
+        result => {
+          
+           var _time = result[0].zones[0].formatted
+           var _city = result[0].zones[0].cityName
+           var foundIndex = self.results.findIndex(x => x.name == _city);
+         
+                     
+           var _temp = result[1].main.temp;
+           if(foundIndex == -1) self.results.push({name:_city, time:_time, temperature:_temp})//foundIndex = 0;
+           else self.results[foundIndex] = {name:_city, time:_time, temperature:_temp};
+        }
+      ).subscribe(
+          ()=>{self.setState({cities: self.results})} 
+      );
+     
+              
+  
+}
   render() {
- //   var cities = Rx.Observable.from([1,2,3]);
-    
-  //   cities.subscribe(function(){
- return(
-  
-  <div class="row">
-   
-      <div className="App">
-      
-        <Square city="Toronto" countryCode="CA" ></Square>
-        <Square city="Chicago" countryCode="US" ></Square>
-        <Square city="Beijing" countryCode="CN"></Square>
-        <Square city="Vancouver" countryCode="CA"></Square>
-        <Square city="Ottawa" countryCode = "CA"></Square>
-        <Square city="Washington" countryCode="US"></Square>
-        <Square city="Paris" countryCode="FR"></Square>
-        <Square city="Tokyo" countryCode="JP"></Square>
-        <Square city="Shanghai" countryCode="CN"></Square>
-
-        
-      </div>
-  
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
  
-   
-      <div className="App">
-      
-        <Square city="Toronto" countryCode="CA" ></Square>
-        <Square city="Chicago" countryCode="US" ></Square>
-        <Square city="Beijing" countryCode="CN"></Square>
-        <Square city="Vancouver" countryCode="CA"></Square>
-        <Square city="Ottawa" countryCode = "CA"></Square>
-        <Square city="Washington" countryCode="US"></Square>
-        <Square city="Paris" countryCode="FR"></Square>
-        <Square city="Tokyo" countryCode="JP"></Square>
-        <Square city="Shanghai" countryCode="CN"></Square>
-
-        
-      </div>
+    var self = this;
+ 
+ return(
+   <div>{
+   self.state.cities.map(function(city)
+   {
+     return <div>{city.name}<br/>{city.time}<br/>
+     {city.temperature}</div>
   
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
-   <div className="App">
-   
-     <Square city="Toronto" countryCode="CA" ></Square>
-     <Square city="Chicago" countryCode="US" ></Square>
-     <Square city="Beijing" countryCode="CN"></Square>
-     <Square city="Vancouver" countryCode="CA"></Square>
-     <Square city="Ottawa" countryCode = "CA"></Square>
-     <Square city="Washington" countryCode="US"></Square>
-     <Square city="Paris" countryCode="FR"></Square>
-     <Square city="Tokyo" countryCode="JP"></Square>
-     <Square city="Shanghai" countryCode="CN"></Square>
-
-     
-   </div>
-
-</div>
+     })
+    
+    
+    }</div>
  );
     
-  
-  
 }
 }
 export default App;
